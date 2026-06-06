@@ -89,10 +89,10 @@ const List<CheckItem> kneeCheckItems = [
     title: '발목 가동성 체크',
     description: '무릎을 앞으로 보내며 발목이 부드럽게 움직이는지 확인해요.',
     difficultRoutine: Routine(
-      title: '발목 가동성 운동',
+      title: '발목 가동성 추천 루틴',
       category: '가동성',
-      description: '발목이 뻣뻣하게 느껴질 때 무릎 움직임 부담을 줄이는 데 도움을 줍니다.',
-      steps: ['벽 앞 무릎 밀기 8회', '종아리 스트레칭 20초', '천천히 2세트 반복'],
+      description: '발목이 뻣뻣하게 느껴질 때 하체 움직임을 부드럽게 준비하는 운동 가이드입니다.',
+      steps: ['벽 발목 가동성 운동', '종아리 스트레칭', '힐 레이즈'],
     ),
   ),
   CheckItem(
@@ -100,10 +100,10 @@ const List<CheckItem> kneeCheckItems = [
     title: '고관절 유연성 체크',
     description: '앉거나 숙일 때 엉덩이 주변이 편하게 움직이는지 살펴봐요.',
     difficultRoutine: Routine(
-      title: '고관절 스트레칭',
+      title: '고관절 유연성 추천 루틴',
       category: '스트레칭',
-      description: '고관절 주변 긴장을 낮추고 하체 움직임을 편하게 준비합니다.',
-      steps: ['누워서 무릎 당기기 20초', '엉덩이 스트레칭 20초', '좌우 2세트 진행'],
+      description: '고관절 주변을 편안하게 풀고 하체 정렬을 준비하는 운동 가이드입니다.',
+      steps: ['90/90 고관절 스트레칭', '런지 자세 고관절 스트레칭', '글루트 브릿지'],
     ),
   ),
   CheckItem(
@@ -111,19 +111,19 @@ const List<CheckItem> kneeCheckItems = [
     title: '한 발 균형 체크',
     description: '한 발로 서 있을 때 몸이 크게 흔들리는지 확인해요.',
     difficultRoutine: Routine(
-      title: '균형/활성화 운동',
+      title: '균형/활성화 추천 루틴',
       category: '활성화',
-      description: '하체 안정감과 무릎 주변 근육의 사용감을 깨우는 루틴입니다.',
-      steps: ['한 발 서기 15초', '의자 잡고 미니 스쿼트 8회', '좌우 2세트 진행'],
+      description: '무릎 주변 안정감과 하체 근육 사용감을 깨우는 운동 가이드입니다.',
+      steps: ['싱글 레그 밸런스', '스텝다운 연습', '바디웨이트 스쿼트'],
     ),
   ),
 ];
 
 const Routine basicKneeRoutine = Routine(
-  title: '무릎 기본 컨디셔닝 루틴',
+  title: '기본 무릎 컨디셔닝 루틴',
   category: '유지 관리',
-  description: '체크가 모두 가능했다면 가벼운 준비 운동으로 움직임을 유지해요.',
-  steps: ['가벼운 제자리 걷기 1분', '무릎 주변 부드러운 굽혔다 펴기 10회', '편안한 범위에서 2세트'],
+  description: '모든 항목이 가능했다면 무릎 주변 움직임을 가볍게 유지하는 루틴을 추천해요.',
+  steps: ['바디웨이트 스쿼트', '런지', '힙힌지 연습'],
 );
 
 class RehabGuideFlow extends StatefulWidget {
@@ -523,14 +523,21 @@ class ResultScreen extends StatelessWidget {
           const SizedBox(height: 20),
           Expanded(
             child: ListView.separated(
-              itemCount: routines.length + 1,
+              itemCount: routines.length + 2,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 if (index == routines.length) {
                   return const InfoCard(
+                    icon: Icons.info_outline,
+                    title: '자가 움직임 체크 기반 안내',
+                    body: '이 결과는 의학적 진단이 아닌 자가 움직임 체크 기반 운동 가이드입니다.',
+                  );
+                }
+                if (index == routines.length + 1) {
+                  return const InfoCard(
                     icon: Icons.health_and_safety_outlined,
                     title: '전문가 상담 권장',
-                    body: '통증이 심하거나 지속되면 운동을 중단하고 전문가 상담을 권장합니다.',
+                    body: '통증이 심하거나 지속된다면 전문가 상담을 권장합니다.',
                   );
                 }
                 return RoutineCard(routine: routines[index]);
