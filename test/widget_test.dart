@@ -55,6 +55,26 @@ void main() {
     expect(find.text('종아리 스트레칭'), findsOneWidget);
     expect(find.text('힐 레이즈'), findsOneWidget);
 
+    await tester.tap(find.text('벽 발목 가동성 운동'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('운동 상세'), findsOneWidget);
+    expect(find.text('운동 목적'), findsOneWidget);
+    expect(find.text('수행 방법'), findsOneWidget);
+    expect(find.text('권장 횟수/시간'), findsOneWidget);
+    expect(find.text('주의사항'), findsOneWidget);
+    expect(find.text('좌우 8~10회씩 2세트'), findsOneWidget);
+
+    await tester.drag(find.byType(ListView), const Offset(0, -520));
+    await tester.pumpAndSettle();
+
+    expect(find.text('통증이 심해지면 중단하고 전문가 상담을 권장합니다.'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('뒤로'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('오늘의 운동 가이드'), findsOneWidget);
+
     await tester.drag(find.byType(ListView), const Offset(0, -480));
     await tester.pumpAndSettle();
 
