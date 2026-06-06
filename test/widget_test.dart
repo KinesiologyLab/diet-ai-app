@@ -1,4 +1,5 @@
 import 'package:diet_ai_app/main.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -22,6 +23,25 @@ void main() {
 
     expect(find.text('무릎 주변 움직임을 체크해요'), findsOneWidget);
     expect(find.text('발목 가동성 체크'), findsOneWidget);
+    expect(find.text('동작 체크하기'), findsWidgets);
+
+    await tester.tap(find.text('동작 체크하기').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('자가 움직임 체크'), findsOneWidget);
+    expect(find.text('모범 동작'), findsOneWidget);
+    expect(find.text('발목 가동성 테스트 예시 영상'), findsOneWidget);
+
+    await tester.drag(find.byType(ListView), const Offset(0, -360));
+    await tester.pumpAndSettle();
+
+    expect(find.text('내 동작'), findsOneWidget);
+    expect(find.text('카메라 미리보기 영역'), findsOneWidget);
+
+    await tester.tap(find.text('체크 완료'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('무릎 주변 움직임을 체크해요'), findsOneWidget);
 
     final difficultButtons = find.text('어려움');
     await tester.tap(difficultButtons.first);

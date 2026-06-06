@@ -51,7 +51,7 @@ class RehabGuideApp extends StatelessWidget {
   }
 }
 
-enum FlowStep { onboarding, bodyPart, kneeCheck, result }
+enum FlowStep { onboarding, bodyPart, kneeCheck, movementCheck, result }
 
 enum CheckStatus { possible, difficult }
 
@@ -137,6 +137,7 @@ class _RehabGuideFlowState extends State<RehabGuideFlow> {
   final TextEditingController _bodyPartController = TextEditingController();
   FlowStep _step = FlowStep.onboarding;
   String _selectedBodyPart = '';
+  CheckItem? _selectedMovementCheckItem;
   final Map<String, CheckStatus> _checkResults = {
     for (final item in kneeCheckItems) item.id: CheckStatus.possible,
   };
@@ -179,6 +180,17 @@ class _RehabGuideFlowState extends State<RehabGuideFlow> {
     setState(() => _checkResults[id] = status);
   }
 
+  void _openMovementCheck(CheckItem item) {
+    setState(() {
+      _selectedMovementCheckItem = item;
+      _step = FlowStep.movementCheck;
+    });
+  }
+
+  void _closeMovementCheck() {
+    setState(() => _step = FlowStep.kneeCheck);
+  }
+
   void _goToResult() {
     setState(() => _step = FlowStep.result);
   }
@@ -214,8 +226,14 @@ class _RehabGuideFlowState extends State<RehabGuideFlow> {
         bodyPart: _selectedBodyPart,
         results: _checkResults,
         onChange: _updateCheck,
+        onStartMovementCheck: _openMovementCheck,
         onNext: _goToResult,
         onBack: () => setState(() => _step = FlowStep.bodyPart),
+      ),
+      FlowStep.movementCheck => MovementCheckCameraScreen(
+        item: _selectedMovementCheckItem ?? kneeCheckItems.first,
+        onComplete: _closeMovementCheck,
+        onBack: _closeMovementCheck,
       ),
       FlowStep.result => ResultScreen(
         results: _checkResults,
@@ -348,6 +366,7 @@ class KneeCheckScreen extends StatelessWidget {
     required this.bodyPart,
     required this.results,
     required this.onChange,
+    required this.onStartMovementCheck,
     required this.onNext,
     required this.onBack,
   });
@@ -355,6 +374,7 @@ class KneeCheckScreen extends StatelessWidget {
   final String bodyPart;
   final Map<String, CheckStatus> results;
   final void Function(String id, CheckStatus status) onChange;
+  final ValueChanged<CheckItem> onStartMovementCheck;
   final VoidCallback onNext;
   final VoidCallback onBack;
 
@@ -386,12 +406,76 @@ class KneeCheckScreen extends StatelessWidget {
                   item: item,
                   selectedStatus: results[item.id] ?? CheckStatus.possible,
                   onChange: (status) => onChange(item.id, status),
+                  onStartMovementCheck: () => onStartMovementCheck(item),
                 );
               },
             ),
           ),
           const SizedBox(height: 16),
           FilledButton(onPressed: onNext, child: const Text('추천 루틴 보기')),
+        ],
+      ),
+    );
+  }
+}
+
+class MovementCheckCameraScreen extends StatelessWidget {
+  const MovementCheckCameraScreen({
+    super.key,
+    required this.item,
+    required this.onComplete,
+    required this.onBack,
+  });
+
+  final CheckItem item;
+  final VoidCallback onComplete;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppScaffold(
+      title: '자가 움직임 체크',
+      onBack: onBack,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(item.title, style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: 10),
+          Text(
+            '모범 동작을 참고한 뒤 내 동작을 편안한 범위에서 확인해요.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 18),
+          Expanded(
+            child: ListView(
+              children: [
+                MovementPreviewCard(
+                  title: '모범 동작',
+                  description: '${item.title.replaceAll(' 체크', '')} 테스트 예시 영상',
+                  icon: Icons.play_circle_outline,
+                  backgroundColor: const Color(0xFFE6EBE8),
+                  foregroundColor: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 14),
+                MovementPreviewCard(
+                  title: '내 동작',
+                  description: '카메라 미리보기 영역',
+                  icon: Icons.videocam_outlined,
+                  backgroundColor: const Color(0xFF202525),
+                  foregroundColor: Colors.white,
+                  isDark: true,
+                ),
+                const SizedBox(height: 14),
+                const InfoCard(
+                  icon: Icons.info_outline,
+                  title: '실제 분석은 아직 연결하지 않았어요',
+                  body: '현재 화면은 카메라 미리보기처럼 보이는 UI입니다. 무리하지 말고 불편하면 움직임을 멈춰주세요.',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton(onPressed: onComplete, child: const Text('체크 완료')),
         ],
       ),
     );
@@ -507,11 +591,13 @@ class CheckCard extends StatelessWidget {
     required this.item,
     required this.selectedStatus,
     required this.onChange,
+    required this.onStartMovementCheck,
   });
 
   final CheckItem item;
   final CheckStatus selectedStatus;
   final ValueChanged<CheckStatus> onChange;
+  final VoidCallback onStartMovementCheck;
 
   @override
   Widget build(BuildContext context) {
@@ -540,6 +626,91 @@ class CheckCard extends StatelessWidget {
               ],
               selected: {selectedStatus},
               onSelectionChanged: (selection) => onChange(selection.first),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: onStartMovementCheck,
+              icon: const Icon(Icons.videocam_outlined),
+              label: const Text('동작 체크하기'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(44),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class MovementPreviewCard extends StatelessWidget {
+  const MovementPreviewCard({
+    super.key,
+    required this.title,
+    required this.description,
+    required this.icon,
+    required this.backgroundColor,
+    required this.foregroundColor,
+    this.isDark = false,
+  });
+
+  final String title;
+  final String description;
+  final IconData icon;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: isDark ? const Color(0xFF111616) : null,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: isDark ? Colors.white : null,
+              ),
+            ),
+            const SizedBox(height: 12),
+            AspectRatio(
+              aspectRatio: 16 / 10,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color:
+                        isDark
+                            ? const Color(0xFF3A4141)
+                            : const Color(0xFFD4DDD9),
+                  ),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(icon, size: 48, color: foregroundColor),
+                      const SizedBox(height: 10),
+                      Text(
+                        description,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: foregroundColor,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
         ),
